@@ -2,7 +2,7 @@ import React from 'react';
 import { InvoiceData } from '../types';
 import { calculateTotals, formatCurrency, formatDate } from '../services/invoiceUtils';
 import Button from './Button';
-import { Plus, ExternalLink, FileText, Calendar, User, DollarSign } from 'lucide-react';
+import { Plus, ExternalLink, FileText, Calendar, User, Download } from 'lucide-react';
 
 interface DashboardProps {
   invoices: InvoiceData[];
@@ -10,6 +10,11 @@ interface DashboardProps {
 }
 
 const Dashboard: React.FC<DashboardProps> = ({ invoices, onCreateNew }) => {
+  const handleDownload = (docId: string) => {
+    const downloadUrl = `https://docs.google.com/document/d/${docId}/export?format=pdf`;
+    window.open(downloadUrl, '_blank');
+  };
+
   if (invoices.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center h-full p-8 text-center animate-fade-in-up">
@@ -96,18 +101,28 @@ const Dashboard: React.FC<DashboardProps> = ({ invoices, onCreateNew }) => {
                       {formatCurrency(total)}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      {invoice.docUrl ? (
-                        <a 
-                          href={invoice.docUrl} 
-                          target="_blank" 
-                          rel="noopener noreferrer"
-                          className="text-brand-600 hover:text-brand-900 inline-flex items-center gap-1"
-                        >
-                          View Doc <ExternalLink size={14} />
-                        </a>
-                      ) : (
-                        <span className="text-gray-400">Draft</span>
-                      )}
+                      <div className="flex items-center justify-end gap-3">
+                        {invoice.docUrl && (
+                          <a 
+                            href={invoice.docUrl} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="text-gray-500 hover:text-brand-600 transition-colors"
+                            title="View Google Doc"
+                          >
+                            <ExternalLink size={18} />
+                          </a>
+                        )}
+                        {invoice.docId && (
+                          <button
+                            onClick={() => handleDownload(invoice.docId!)}
+                            className="text-gray-500 hover:text-brand-600 transition-colors"
+                            title="Download PDF"
+                          >
+                            <Download size={18} />
+                          </button>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 );
@@ -117,8 +132,6 @@ const Dashboard: React.FC<DashboardProps> = ({ invoices, onCreateNew }) => {
         </div>
       </div>
       
-      {/* Mobile Card View (visible only on small screens if we wanted to hide table, but scrolling table is often better. 
-          Adding a simple summary count for now) */}
       <div className="mt-4 text-xs text-gray-500 text-center sm:text-left">
         Showing {invoices.length} invoice{invoices.length !== 1 ? 's' : ''}
       </div>

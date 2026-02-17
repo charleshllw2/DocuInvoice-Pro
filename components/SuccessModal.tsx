@@ -65,12 +65,12 @@ const SuccessModal: React.FC<SuccessModalProps> = ({ docUrl, docId, onClose }) =
                 rel="noopener noreferrer"
                 className="w-full"
                >
-                 <Button className="w-full" icon={<ExternalLink size={16} />}>
+                 <Button className="w-full" variant="secondary" icon={<ExternalLink size={16} />}>
                    View Doc
                  </Button>
                </a>
                <Button 
-                variant="outline" 
+                variant="primary" 
                 className="w-full" 
                 onClick={handleDownload}
                 icon={<Download size={16} />}
