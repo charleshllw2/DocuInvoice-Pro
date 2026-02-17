@@ -1,19 +1,35 @@
 import React from 'react';
 import { InvoiceData } from '../types';
 import { calculateTotals, formatCurrency, formatDate } from '../services/invoiceUtils';
+import { IS_DEMO_MODE } from '../services/googleService';
 import Button from './Button';
 import { Plus, ExternalLink, FileText, Calendar, User, Download } from 'lucide-react';
 
 interface DashboardProps {
   invoices: InvoiceData[];
+  isLoading?: boolean;
   onCreateNew: () => void;
 }
 
-const Dashboard: React.FC<DashboardProps> = ({ invoices, onCreateNew }) => {
+const Dashboard: React.FC<DashboardProps> = ({ invoices, isLoading, onCreateNew }) => {
   const handleDownload = (docId: string) => {
+    if (IS_DEMO_MODE && docId === '1234567890abcdef') {
+      alert("Note: This is a demo invoice. Real document generation and PDF downloads require setting up your own Google Cloud and Firebase API keys in .env.local.");
+      return;
+    }
     const downloadUrl = `https://docs.google.com/document/d/${docId}/export?format=pdf`;
     window.open(downloadUrl, '_blank');
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center h-full p-8 text-center animate-pulse">
+        <div className="w-24 h-24 bg-gray-200 rounded-full mb-6"></div>
+        <div className="h-6 w-48 bg-gray-200 rounded mb-2"></div>
+        <div className="h-4 w-64 bg-gray-100 rounded mb-8"></div>
+      </div>
+    );
+  }
 
   if (invoices.length === 0) {
     return (
@@ -72,13 +88,12 @@ const Dashboard: React.FC<DashboardProps> = ({ invoices, onCreateNew }) => {
                 return (
                   <tr key={invoice.id} className="hover:bg-gray-50 transition-colors">
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                        invoice.status === 'Generated' 
-                          ? 'bg-green-100 text-green-800' 
-                          : invoice.status === 'Paid'
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${invoice.status === 'Generated'
+                        ? 'bg-green-100 text-green-800'
+                        : invoice.status === 'Paid'
                           ? 'bg-blue-100 text-blue-800'
                           : 'bg-gray-100 text-gray-800'
-                      }`}>
+                        }`}>
                         {invoice.status}
                       </span>
                     </td>
@@ -103,9 +118,9 @@ const Dashboard: React.FC<DashboardProps> = ({ invoices, onCreateNew }) => {
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <div className="flex items-center justify-end gap-3">
                         {invoice.docUrl && (
-                          <a 
-                            href={invoice.docUrl} 
-                            target="_blank" 
+                          <a
+                            href={invoice.docUrl}
+                            target="_blank"
                             rel="noopener noreferrer"
                             className="text-gray-500 hover:text-brand-600 transition-colors"
                             title="View Google Doc"
@@ -131,7 +146,7 @@ const Dashboard: React.FC<DashboardProps> = ({ invoices, onCreateNew }) => {
           </table>
         </div>
       </div>
-      
+
       <div className="mt-4 text-xs text-gray-500 text-center sm:text-left">
         Showing {invoices.length} invoice{invoices.length !== 1 ? 's' : ''}
       </div>

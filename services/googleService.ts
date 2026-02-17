@@ -2,6 +2,8 @@ import { InvoiceData } from '../types';
 import { calculateTotals, formatCurrency, formatDate } from './invoiceUtils';
 import { GOOGLE_API_KEY, GOOGLE_CLIENT_ID, SCOPES } from '../constants';
 
+export const IS_DEMO_MODE = GOOGLE_CLIENT_ID === 'YOUR_CLIENT_ID_HERE';
+
 // Declare globals for the Google scripts loaded in index.html
 declare global {
   interface Window {
@@ -44,8 +46,8 @@ function checkInit(resolve: () => void) {
 export const signInWithGoogle = (): Promise<string> => {
   return new Promise((resolve, reject) => {
     // Demo Mode fallback if API keys are not set
-    if (GOOGLE_CLIENT_ID === 'YOUR_CLIENT_ID_HERE') {
-      console.warn('Using Demo Mode: API Keys not set.');
+    if (IS_DEMO_MODE) {
+      console.warn('Using Demo Mode: Google API Keys not set.');
       setTimeout(() => resolve('demo-token'), 1000);
       return;
     }
@@ -67,16 +69,16 @@ export const signInWithGoogle = (): Promise<string> => {
 
 export const createInvoiceDoc = async (invoice: InvoiceData): Promise<{ docUrl: string, docId: string }> => {
   // Demo Mode Fallback
-  if (GOOGLE_CLIENT_ID === 'YOUR_CLIENT_ID_HERE') {
-      console.log('Simulating Google Doc Generation...', invoice);
-      return new Promise((resolve) => {
-        setTimeout(() => {
-          resolve({
-            docUrl: 'https://docs.google.com/document/d/1234567890abcdef/edit',
-            docId: '1234567890abcdef'
-          }); 
-        }, 2000);
-      });
+  if (IS_DEMO_MODE) {
+    console.log('Simulating Google Doc Generation...', invoice);
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        resolve({
+          docUrl: 'https://docs.google.com/document/d/1234567890abcdef/edit',
+          docId: '1234567890abcdef'
+        });
+      }, 2000);
+    });
   }
 
   const { subtotal, taxAmount, total } = calculateTotals(invoice.job);
@@ -115,15 +117,15 @@ export const createInvoiceDoc = async (invoice: InvoiceData): Promise<{ docUrl: 
       }
     },
     {
-       updateParagraphStyle: {
-         // We're appending, so strict indices calculation is complex. 
-         // Strategy: We will use a sequence of inserts.
-         // A more robust way for production is to keep a running index cursor.
-         // Here, for simplicity in this demo environment, we will dump the text roughly.
-         range: { startIndex: 1, endIndex: 1 }, // Placeholder, real implementation requires index tracking
-         paragraphStyle: { alignment: 'CENTER' },
-         fields: 'alignment'
-       }
+      updateParagraphStyle: {
+        // We're appending, so strict indices calculation is complex. 
+        // Strategy: We will use a sequence of inserts.
+        // A more robust way for production is to keep a running index cursor.
+        // Here, for simplicity in this demo environment, we will dump the text roughly.
+        range: { startIndex: 1, endIndex: 1 }, // Placeholder, real implementation requires index tracking
+        paragraphStyle: { alignment: 'CENTER' },
+        fields: 'alignment'
+      }
     },
     // --- Invoice Info ---
     {
@@ -172,7 +174,7 @@ export const createInvoiceDoc = async (invoice: InvoiceData): Promise<{ docUrl: 
   // However, `insertText` at `endOfSegmentLocation` works well for sequential appending.
   // Formatting specific ranges (like BOLDing the Total) requires knowing the exact start index.
   // In a real app, we track `currentIndex` += text.length.
-  
+
   // Executing the batch update (Simplified for the demo to just insert text)
   await window.gapi.client.docs.documents.batchUpdate({
     documentId: docId,
