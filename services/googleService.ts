@@ -12,36 +12,37 @@ declare global {
   }
 }
 
-let tokenClient: any;
 let gapiInited = false;
-let gisInited = false;
 
 export const initializeGoogleApi = async (): Promise<void> => {
   return new Promise((resolve) => {
-    window.gapi.load('client', async () => {
-      await window.gapi.client.init({
-        apiKey: GOOGLE_API_KEY,
-        discoveryDocs: ['https://docs.googleapis.com/$discovery/rest?version=v1', 'https://www.googleapis.com/discovery/v1/apis/drive/v3/rest'],
-      });
-      gapiInited = true;
-      checkInit(resolve);
-    });
+    if (gapiInited) {
+      resolve();
+      return;
+    }
 
-    tokenClient = window.google.accounts.oauth2.initTokenClient({
-      client_id: GOOGLE_CLIENT_ID,
-      scope: SCOPES,
-      callback: '', // defined at request time
+    if (!window.gapi) {
+      console.error('GAPI not found');
+      resolve();
+      return;
+    }
+
+    window.gapi.load('client', async () => {
+      try {
+        await window.gapi.client.init({
+          apiKey: GOOGLE_API_KEY,
+          discoveryDocs: ['https://docs.googleapis.com/$discovery/rest?version=v1', 'https://www.googleapis.com/discovery/v1/apis/drive/v3/rest'],
+        });
+        gapiInited = true;
+      } catch (error) {
+        console.error('Error initializing GAPI client', error);
+      }
+      resolve();
     });
-    gisInited = true;
-    checkInit(resolve);
   });
 };
 
-function checkInit(resolve: () => void) {
-  if (gapiInited && gisInited) {
-    resolve();
-  }
-}
+import { getGoogleAccessToken } from './firebase';
 
 export const signInWithGoogle = (): Promise<string> => {
   return new Promise((resolve, reject) => {
@@ -52,22 +53,20 @@ export const signInWithGoogle = (): Promise<string> => {
       return;
     }
 
-    tokenClient.callback = async (resp: any) => {
-      if (resp.error) {
-        reject(resp);
-      }
-      resolve(resp.access_token);
-    };
-
-    if (window.gapi.client.getToken() === null) {
-      tokenClient.requestAccessToken({ prompt: 'consent' });
+    const token = getGoogleAccessToken();
+    if (token) {
+      window.gapi.client.setToken({ access_token: token });
+      resolve(token);
     } else {
-      tokenClient.requestAccessToken({ prompt: '' });
+      reject(new Error("No Google access token found. Please log in first."));
     }
   });
 };
 
 export const createInvoiceDoc = async (invoice: InvoiceData): Promise<{ docUrl: string, docId: string }> => {
+  // Ensure token is set
+  await signInWithGoogle();
+
   // Demo Mode Fallback
   if (IS_DEMO_MODE) {
     console.log('Simulating Google Doc Generation...', invoice);

@@ -69,9 +69,13 @@ const App: React.FC = () => {
     try {
       await firebaseSignIn();
       // Auth state listener handles the rest
-    } catch (error) {
+    } catch (error: any) {
       console.error('Login failed', error);
-      // Removed mock fallback to ensure real auth works
+      if (error.code === 'auth/cancelled-popup-request' || error.code === 'auth/popup-closed-by-user') {
+        alert("The login popup was closed or blocked. Please ensure you allow pop-ups for this site and try again.");
+      } else {
+        alert("Login failed: " + (error.message || "Unknown error"));
+      }
     }
   };
 

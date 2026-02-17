@@ -38,6 +38,8 @@ export interface InvoiceData {
   status: 'Draft' | 'Generated' | 'Paid';
   docUrl?: string;
   docId?: string;
+  createdAt?: any; // Firebase Timestamp
+  updatedAt?: any; // Firebase Timestamp
 }
 
 export interface User {

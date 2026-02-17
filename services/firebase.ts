@@ -17,16 +17,24 @@ const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 export const db = getFirestore(app);
 const googleProvider = new GoogleAuthProvider();
+googleProvider.addScope('https://www.googleapis.com/auth/documents');
+googleProvider.addScope('https://www.googleapis.com/auth/drive.file');
+
+let googleAccessToken: string | null = null;
 
 export const signInWithGoogle = async () => {
   try {
     const result = await signInWithPopup(auth, googleProvider);
+    const credential = GoogleAuthProvider.credentialFromResult(result);
+    googleAccessToken = credential?.accessToken || null;
     return result.user;
   } catch (error) {
     console.error("Error signing in with Google", error);
     throw error;
   }
 };
+
+export const getGoogleAccessToken = () => googleAccessToken;
 
 export const logout = () => signOut(auth);
 
@@ -49,14 +57,20 @@ export const getUserInvoices = async (userId: string) => {
   try {
     const q = query(
       collection(db, 'invoices'),
-      where('userId', '==', userId),
-      orderBy('createdAt', 'desc')
+      where('userId', '==', userId)
     );
     const querySnapshot = await getDocs(q);
-    return querySnapshot.docs.map(doc => ({
+    const invoices = querySnapshot.docs.map(doc => ({
       ...doc.data(),
       id: doc.id
     })) as InvoiceData[];
+
+    // Sort manually by createdAt decending
+    return invoices.sort((a, b) => {
+      const dateA = a.createdAt?.toMillis?.() || 0;
+      const dateB = b.createdAt?.toMillis?.() || 0;
+      return dateB - dateA;
+    });
   } catch (error) {
     console.error("Error getting invoices", error);
     throw error;
