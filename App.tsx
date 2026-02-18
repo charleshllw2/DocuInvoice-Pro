@@ -11,6 +11,7 @@ import { initializeGoogleApi, signInWithGoogle, createInvoiceDoc } from './servi
 import { Wand2, LogOut, FileText, Edit3, Eye, LayoutDashboard, Plus } from 'lucide-react';
 import { auth, signInWithGoogle as firebaseSignIn, logout as firebaseLogout, saveInvoice, getUserInvoices } from './services/firebase';
 import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
+import { SpeedInsights } from "@vercel/speed-insights/react";
 
 // Use a simple mock for authentication state since we can't fully implement
 // secure backend persistence in this frontend-only demo.
@@ -278,6 +279,7 @@ const App: React.FC = () => {
           onClose={handleCloseSuccessModal}
         />
       )}
+      <SpeedInsights />
     </div>
   );
 };
