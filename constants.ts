@@ -2,8 +2,8 @@ import { InvoiceData } from './types';
 
 // NOTE: In a real production app, these would come from environment variables.
 // Users must supply their own API Key and Client ID to make the Google APIs work fully.
-export const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || 'YOUR_CLIENT_ID_HERE';
-export const GOOGLE_API_KEY = import.meta.env.VITE_GOOGLE_API_KEY || 'YOUR_API_KEY_HERE';
+export const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+export const GOOGLE_API_KEY = import.meta.env.VITE_GOOGLE_API_KEY;
 export const SCOPES = 'https://www.googleapis.com/auth/documents https://www.googleapis.com/auth/drive.file';
 
 export const DEFAULT_INVOICE: InvoiceData = {
